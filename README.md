@@ -24,7 +24,7 @@ Compiles `dungeon_crawler.cpp` automatically and opens `http://localhost:8080`:
 ```bash
 python3 play.py
 ```
-*(Use **Arrow keys** or **W A S D** to move directly — no pressing Enter. Press **R** to restart.)*
+*(Use **Arrow keys** or **W A S D** to move directly — no pressing Enter. Press **L** to toggle the live OOP Code Panel, **I** to replay the Star Wars Lore Intro, and **R** to restart.)*
 
 ### 3. Run in Classic C++ Terminal Mode (Optional)
 ```bash
@@ -66,15 +66,15 @@ g++ -std=c++11 -Wall -Wextra dungeon_crawler.cpp -o dungeon
 ## Project Summary
 - **Problem Addressed:** Bridges textbook C++ OOP theory and practical software by applying core OOP mechanisms in an interactive game.
 - **Verification:** Compiles with **0 warnings** (`-Wall -Wextra`), **0 memory leaks** (ASan/UBSan), passes **14/14** edge-case tests, and features dynamic per-turn Goblin movement tuned to a challenging **~1% blind-rush win rate**.
-- **Mapped SDG:** **SDG 4 (Quality Education)** — interactive learning aid for C++ OOP concepts.
+- **Mapped SDG:** **SDG 4 (Quality Education)** — interactive C++ OOP learning tool with an opening lore crawl (`I`), live plain-English + C++ code panel (`L`), and a 6-card end-of-run OOP recap.
 
 ---
 
 ## Repository Structure
 ```text
 dungeon-crawler/
-├── dungeon_crawler.cpp   # C++11 OOP game engine (248 lines)
-├── play.py               # Localhost 2D pixel-art web UI (114 lines)
+├── dungeon_crawler.cpp   # C++11 OOP game engine & live concept tracer (236 lines)
+├── play.py               # Localhost 2D pixel-art learning UI & lore intro (154 lines)
 ├── README.md             # Setup & architecture guide
 └── .gitignore            # Ignores compiled binaries and scores.txt
 ```

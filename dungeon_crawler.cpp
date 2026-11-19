@@ -18,10 +18,7 @@ public:
     const char* what() const noexcept override { return msg.c_str(); }
 };
 
-struct Bonus {
-    int hp, atk;
-    Bonus(int h, int a) : hp(h), atk(a) {}
-};
+struct Bonus { int hp, atk; Bonus(int h, int a) : hp(h), atk(a) {} };
 
 class Entity {
 protected:
@@ -37,13 +34,9 @@ public:
     void takeDamage(int d) { hp = (hp - d < 0) ? 0 : hp - d; }
     void moveTo(int nx, int ny) { x = nx; y = ny; }
     string getName() const { return name; }
-    int getX() const { return x; }
-    int getY() const { return y; }
-    int getHP() const { return hp; }
-    int getAttack() const { return attack; }
-    friend ostream& operator<<(ostream& out, const Entity& e) {
-        return out << e.name << "  HP: " << e.hp << "  ATK: " << e.attack;
-    }
+    int getX() const { return x; } int getY() const { return y; }
+    int getHP() const { return hp; } int getAttack() const { return attack; }
+    friend ostream& operator<<(ostream& out, const Entity& e) { return out << e.name << "  HP: " << e.hp << "  ATK: " << e.attack; }
 };
 
 class Player : public Entity {
@@ -52,14 +45,9 @@ public:
     Player(int px, int py) : Entity("Hero", 50, 6, px, py), maxHP(50) {}
     char symbol() const override { return '@'; }
     int rollDamage() override { return attack + rand() % 3; }
-    string hitMessage(int dmg) const override {
-        ostringstream s; s << "You strike for " << dmg << " damage!"; return s.str();
-    }
+    string hitMessage(int dmg) const override { ostringstream s; s << "You strike for " << dmg << " damage!"; return s.str(); }
     Player operator+(const Bonus& b) const {
-        Player r = *this;
-        r.hp = (r.hp + b.hp > r.maxHP) ? r.maxHP : r.hp + b.hp;
-        r.attack += b.atk;
-        return r;
+        Player r = *this; r.hp = (r.hp + b.hp > r.maxHP) ? r.maxHP : r.hp + b.hp; r.attack += b.atk; return r;
     }
 };
 
@@ -69,10 +57,7 @@ public:
     char symbol() const override { return 'G'; }
     int rollDamage() override { return (rand() % 4 == 0) ? attack * 2 : attack; }
     string hitMessage(int dmg) const override {
-        ostringstream s;
-        s << (dmg > attack ? "The Goblin stabs you from behind for " : "The Goblin slashes you for ")
-          << dmg << " damage" << (dmg > attack ? "!" : ".");
-        return s.str();
+        ostringstream s; s << (dmg > attack ? "The Goblin stabs you from behind for " : "The Goblin slashes you for ") << dmg << " damage" << (dmg > attack ? "!" : "."); return s.str();
     }
 };
 
@@ -81,9 +66,9 @@ class Game {
     char map[H][W + 1];
     Player player;
     vector<Entity*> monsters;
-    string message;
+    string message, oopNote;
     int turns, goblinsDefeated;
-    bool won, quit;
+    bool won, quit, oopMode;
 
     Entity* monsterAt(int mx, int my) {
         for (size_t i = 0; i < monsters.size(); i++)
@@ -123,6 +108,7 @@ class Game {
             log << "\n  " << m->hitMessage(back);
         }
         message = log.str();
+        oopNote = "[Polymorphism] Entity* -> virtual rollDamage() & hitMessage()";
     }
 
     void moveGoblins(Entity* skip = NULL) {
@@ -155,11 +141,11 @@ class Game {
         if (Entity* m = monsterAt(nx, ny)) { fight(m); moveGoblins(m); return; }
         if (map[ny][nx] == 'E') {
             if (!monsters.empty()) { turns--; throw InvalidMoveException("The exit is locked until every Goblin is defeated!"); }
-            player.moveTo(nx, ny); won = true; return;
+            player.moveTo(nx, ny); won = true; oopNote = "[File Handling] Game::saveScore() writing via fstream"; return;
         }
-        player.moveTo(nx, ny); message = "";
-        if (map[ny][nx] == 'P') { player = player + Bonus(20, 0); map[ny][nx] = '.'; message = "You drink a potion: +20 HP!"; }
-        else if (map[ny][nx] == 'S') { player = player + Bonus(0, 5); map[ny][nx] = '.'; message = "You pick up a sword: +5 Attack!"; }
+        player.moveTo(nx, ny); message = ""; oopNote = "[Encapsulation] Player::moveTo() updated private (x, y)";
+        if (map[ny][nx] == 'P') { player = player + Bonus(20, 0); map[ny][nx] = '.'; message = "You drink a potion: +20 HP!"; oopNote = "[Operator Overloading] Player::operator+(Bonus(20, 0))"; }
+        else if (map[ny][nx] == 'S') { player = player + Bonus(0, 5); map[ny][nx] = '.'; message = "You pick up a sword: +5 Attack!"; oopNote = "[Operator Overloading] Player::operator+(Bonus(0, 5))"; }
         moveGoblins();
     }
 
@@ -178,6 +164,7 @@ class Game {
         }
         cout << "\n   " << player << "   Goblins left: " << monsters.size() << "\n";
         if (!message.empty()) cout << "\n  " << message << "\n";
+        if (oopMode && !oopNote.empty()) cout << "  [OOP] " << oopNote << "\n";
     }
 
     void saveScore() const {
@@ -188,7 +175,8 @@ class Game {
     }
 
 public:
-    Game() : player(1, 1), turns(0), goblinsDefeated(0), won(false), quit(false) { loadMap(); }
+    Game() : player(1, 1), oopNote("[Abstraction] Player & Goblin inherit abstract Entity"),
+             turns(0), goblinsDefeated(0), won(false), quit(false), oopMode(true) { loadMap(); }
     ~Game() { for (size_t i = 0; i < monsters.size(); i++) delete monsters[i]; }
 
     static void showHallOfFame() {
@@ -212,7 +200,7 @@ public:
     void run() {
         while (!won && player.isAlive() && !quit) {
             draw(); message = "";
-            cout << "\n  Your move (W/A/S/D, Q to quit): " << flush;
+            cout << "\n  Your move (W/A/S/D, L=OOP, Q to quit): " << flush;
             string line;
             if (!getline(cin, line)) { quit = true; break; }
             try {
@@ -220,10 +208,11 @@ public:
                 switch ((char)tolower((unsigned char)line[0])) {
                     case 'w': tryMove(0, -1); break; case 's': tryMove(0, 1); break;
                     case 'a': tryMove(-1, 0); break; case 'd': tryMove(1, 0); break;
+                    case 'l': oopMode = !oopMode; oopNote = oopMode ? "[Encapsulation] OOP Learning Mode ON" : ""; message = oopMode ? "OOP Learning Mode ON." : "OOP Learning Mode OFF."; break;
                     case 'q': quit = true; break;
-                    default: throw InvalidMoveException("Unknown key. Use W, A, S, D or Q.");
+                    default: throw InvalidMoveException("Unknown key. Use W, A, S, D, L or Q.");
                 }
-            } catch (const InvalidMoveException& e) { message = string("! ") + e.what(); }
+            } catch (const InvalidMoveException& e) { message = string("! ") + e.what(); oopNote = "[Exception Handling] Caught InvalidMoveException::what()"; }
         }
         draw();
         cout << "\n  ==========================================\n";
@@ -243,6 +232,5 @@ int main() {
     string dummy; getline(cin, dummy);
     Game game; game.run();
     try { Game::showHallOfFame(); } catch (const runtime_error& e) { cout << "\n  " << e.what() << "\n"; }
-    cout << "\n";
     return 0;
 }
